@@ -3,10 +3,6 @@
 
     //Cardstack API
 
-    //Todo: Let's have one general cardstack which *initially* holds all cards. On setup, all cards get moved
-    //into the player cardstacks. To get all cards we must query the general cardstack + all player cardstacks. This
-    //reasembles the real world
-
     quartett.Cardstack = function(options){
         var that = this;
         that._stack = options && options.cards ? options.cards : [];
