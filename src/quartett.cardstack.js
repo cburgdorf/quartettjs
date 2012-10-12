@@ -8,10 +8,6 @@
         that._stack = options && options.cards ? options.cards : [];
     };
 
-    quartett.Cardstack.prototype.rotateForward = function() {
-        quartett.Util.moveInArray(this._stack,-1, 0);
-    };
-
     quartett.Cardstack.prototype.add = function(value){
         var that = this;
         if (quartett.Util.isArray(value)){
