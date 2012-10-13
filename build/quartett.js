@@ -11,6 +11,24 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 
 
+(function (window) {
+    window.quartett = { };
+})(window);
+(function (quartett, undefined) {
+    "use strict";
+
+    quartett.Util = {
+        isArray: function(value){
+            return toString.call(value) === '[object Array]';
+        },
+        isFunction: function(value){
+            return typeof value === 'function';
+        },
+        isString: function(value){
+            return typeof  value === 'string';
+        }
+    };
+})(quartett);
 (function (quartett, undefined) {
     "use strict";
 
@@ -50,9 +68,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     };
 
 })(quartett);
-(function (window) {
-    window.quartett = { };
-})(window);
 (function (quartett, undefined) {
     "use strict";
 
@@ -331,19 +346,4 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         this._cardStack.add(card);
     };
 
-})(quartett);
-(function (quartett, undefined) {
-    "use strict";
-
-    quartett.Util = {
-        isArray: function(value){
-            return toString.call(value) === '[object Array]';
-        },
-        isFunction: function(value){
-            return typeof value === 'function';
-        },
-        isString: function(value){
-            return typeof  value === 'string';
-        }
-    };
 })(quartett);
