@@ -100,11 +100,6 @@
             player.add(cards);
         };
 
-        //Todo
-        //handle the fact that there can be draws not only between the active player and the best other player
-        //but also between the other players. E.g. the active player has a score of 3 on the property but two
-        //other players both have a score of 4
-
         if (scoreAgainstTheBest === -1){
 
             //figure out if the best other player is the *only* winner or if there is a draw between other players going on
