@@ -129,31 +129,8 @@
         return this._activePlayer;
     };
 
-    quartett.Game.prototype.filterPlayer = function(predicate){
-        var matched = [];
-        var that = this;
-        this._playerList.forEach(function(value){
-            if (predicate(value)){
-                matched.push(value);
-            }
-        });
-        return matched;
-    };
-
     quartett.Game.prototype.getCards = function(){
         return this._cardStack.getCards();
-    };
-
-    quartett.Game.prototype.filterCards = function(predicate){
-        var tempCards = [];
-
-        this._cardStack.forEach(function(value){
-           if(predicate(value)){
-               tempCards.push(value);
-           }
-        });
-
-        return tempCards;
     };
 
     //PRIVATE METHODS
