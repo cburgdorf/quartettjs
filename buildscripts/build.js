@@ -16,7 +16,7 @@
 
     concat([
         'LICENSE.txt',
-        '../src/quartett.cardsteck.js',
+        '../src/quartett.cardstack.js',
         '../src/quartett.core.js',
         '../src/quartett.defaultcardcomparer.js',
         '../src/quartett.game.js',
