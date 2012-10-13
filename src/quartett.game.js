@@ -95,16 +95,45 @@
 
         var scoreAgainstTheBest = comparer(that._activePlayer.getTopmostCard()[property], best.topCard[property]);
 
+        var giveTopmostCardsToPlayer = function(player){
+            var cards = that._getAllTopMostCards();
+            player.add(cards);
+        };
+
         //Todo
         //handle the fact that there can be draws not only between the active player and the best other player
         //but also between the other players. E.g. the active player has a score of 3 on the property but two
         //other players both have a score of 4
 
         if (scoreAgainstTheBest === -1){
-            var cards = this._getAllTopMostCards();
-            best.player.add(cards);
-            this._activePlayer = best.player;
 
+            //figure out if the best other player is the only winner or if there is a draw between other player going on
+            if(otherPlayer.length > 1){
+                var second = otherPlayer[otherPlayer.length - 2];
+                var scoreAgainstSecond = comparer(best.topCard[property], second.topCard[property]);
+
+                if (scoreAgainstSecond === 0){
+                    //there's a draw between the best other player and at least the second best other player
+                    //notify the draw, change the active player and let him play on another property
+
+                    //We need to blacklist this card so that the active player can't win the pot on another property
+                    //because he already lost on this property but the card continues beeing played
+                    this._activePlayer.getTopmostCard()._blacklisted = true;
+
+                    this._dispatchEvent("drawHappened", this);
+                }
+                else{
+                    //there's no draw between the best and the second. Hand over the cards!
+                    giveTopmostCardsToPlayer(best.player);
+                }
+            }
+            else{
+                //there is just on clear winner, hand the cards over to him/her
+                giveTopmostCardsToPlayer(best.player);
+            }
+
+            //in any case, the active player changed
+            this._activePlayer = best.player;
             //notify that the active user has changed
             this._dispatchEvent("activePlayerChanged", this);
 
@@ -115,8 +144,7 @@
             this._dispatchEvent("drawHappened", this);
         }
         else{
-            var cards = this._getAllTopMostCards();
-            this._activePlayer.add(cards);
+            giveTopmostCardsToPlayer(this._activePlayer);
         }
 
         //notify progress of the game
@@ -140,6 +168,8 @@
 
         while(nCards > 0){
             var topmostCard = this._cardStack.popOutTopmostCard();
+            //remove the blacklist marker that might be on the card
+            topmostCard._blacklisted = false;
             player.add(topmostCard);
 
             nCards--;
@@ -150,7 +180,7 @@
         var that = this;
         return that._playerList
             .filter(function(player){
-                return player !== that._activePlayer;
+                return player !== that._activePlayer && !player.getTopmostCard()._blacklisted;
             })
             .map(function(player){
                 return {

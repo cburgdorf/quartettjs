@@ -197,3 +197,100 @@ test('Christoph wins the game after a draw card', function () {
     ok(eventStack[5] === "gameFinished");
 });
 
+
+test('Can handle higher draw between other players', function () {
+
+    var cardPascal = { wheels: 4, speed: 130 };
+
+    //ATTENTION:
+    //Christoph has a higher speed than Pascal or Stephan. However he loses on the wheels property
+    //which leads to a draw between Pascal and Stephan. Therefor they play on the speed property.
+    //Even so Christoph has a higher speed property, he is already out on this card. That might be obvious
+    //but the data for the test was carefully picked to reflect this scenario
+
+    var cardChristoph = { wheels: 2, speed: 150 };
+
+    var cardStephan = { wheels: 4, speed: 140 };
+
+    var gameOptions = {
+        player: ['Stephan', 'Christoph', 'Pascal'],
+        cards:[
+                cardPascal,
+                cardChristoph,
+                cardStephan
+            ]
+    };
+
+    var eventStack = [];
+
+    //up front, hook up events
+    gameOptions.gameFinished = function(game, results){
+        eventStack.push("gameFinished")
+        //The game starts with Christoph asking to play on the "wheel" property. After Pascal and Stephan
+        //have a draw here, they play on the speed property so that Stephan wins
+        ok(results.winner.getName() === 'Stephan');
+    };
+
+    gameOptions.gameMoved = function(game){
+        eventStack.push("gameMoved");
+    };
+
+    gameOptions.activePlayerChanged = function(game){
+        eventStack.push("activePlayerChanged");
+    };
+
+    gameOptions.drawHappened = function(game){
+        eventStack.push("drawHappened");
+    };
+
+    var game = new quartett.Game(gameOptions);
+    game.start("Christoph");
+
+    //let's make sure the game begins as expected
+    ok(game.getStephan().getCards().length === 1);
+    ok(game.getChristoph().getCards().length === 1);
+    ok(game.getPascal().getCards().length === 1);
+
+    //just to stay on top of the things, let's make sure everyone has got the card he deserves :-)
+    ok(game.getStephan().getCards()[0] === cardStephan);
+    ok(game.getChristoph().getCards()[0] === cardChristoph);
+    ok(game.getPascal().getCards()[0] === cardPascal);
+
+    //Christoph plays on wheels, his card has 2 wheels whereas Stephan and Pascal have both 4 wheels
+    game.playCard("wheels");
+
+    //Not only the active player changed, but also the game noticed a draw (between Stephan and Pascal)
+    ok(eventStack[eventStack.length - 3] === 'drawHappened');
+    ok(eventStack[eventStack.length - 2] === 'activePlayerChanged');
+    ok(eventStack[eventStack.length - 1] === 'gameMoved');
+
+    //assume they still got their cards. Nothing happened after all
+    ok(game.getStephan().getCards().length === 1);
+    ok(game.getChristoph().getCards().length === 1);
+    ok(game.getPascal().getCards().length === 1);
+
+    //Also make sure Christoph won't be the active player any more
+    ok(game.getActivePlayer().getName() !== "Christoph");
+
+    //we switch over to the speed property because of the draw
+    game.playCard("speed");
+
+    //At this point Stephan wins the cards with the speed property
+    ok(game.getStephan().getCards().length === 3);
+    ok(game.getChristoph().getCards().length === 0);
+    ok(game.getPascal().getCards().length === 0);
+
+    //Also make sure Stephan continues to be the active player
+    ok(game.getActivePlayer().getName() === "Stephan");
+
+    //Make sure the events appeared in the correct order
+    ok(eventStack[0] === "drawHappened");
+    ok(eventStack[1] === "activePlayerChanged");
+    ok(eventStack[2] === "gameMoved");
+    //The player change from Christoph to Pascal to Stephan
+    //We actually don't care whether Pascal or Stephan take ownership after Christoph loses. Both
+    //have the same score and it might be even browser specific how Array.sort() works in this regard.
+    ok(eventStack[3] === "activePlayerChanged");
+    ok(eventStack[4] === "gameMoved");
+    ok(eventStack[5] === "gameFinished");
+});
