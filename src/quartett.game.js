@@ -35,7 +35,7 @@
                 that._playerStack[value] = tempPlayer;
                 that._playerList.push(tempPlayer);
 
-                that._giveTopmostCardsToPlayer(tempPlayer, that._initialCardsPerPlayer)
+                that._giveTopmostFreeCardsToPlayer(tempPlayer, that._initialCardsPerPlayer)
 
                 that['get' + value] = function(){
                         var player = that._playerStack[value];
@@ -88,10 +88,10 @@
             return comparer(a.topCard[property], b.topCard[property]);
         };
 
-        var otherPlayer = that._getInactivePlayerAndTheirTopmostCards()
+        var otherPlayers = that._getInactivePlayerAndTheirTopmostCards()
                               .sort(unwrapAndCompare);
 
-        var best = otherPlayer[otherPlayer.length - 1];
+        var best = otherPlayers[otherPlayers.length - 1];
 
         var scoreAgainstTheBest = comparer(that._activePlayer.getTopmostCard()[property], best.topCard[property]);
 
@@ -107,9 +107,9 @@
 
         if (scoreAgainstTheBest === -1){
 
-            //figure out if the best other player is the only winner or if there is a draw between other player going on
-            if(otherPlayer.length > 1){
-                var second = otherPlayer[otherPlayer.length - 2];
+            //figure out if the best other player is the *only* winner or if there is a draw between other players going on
+            if(otherPlayers.length > 1){
+                var second = otherPlayers[otherPlayers.length - 2];
                 var scoreAgainstSecond = comparer(best.topCard[property], second.topCard[property]);
 
                 if (scoreAgainstSecond === 0){
@@ -163,7 +163,7 @@
 
     //PRIVATE METHODS
 
-    quartett.Game.prototype._giveTopmostCardsToPlayer = function(player, nCards){
+    quartett.Game.prototype._giveTopmostFreeCardsToPlayer = function(player, nCards){
         nCards = !nCards ? 1 : nCards;
 
         while(nCards > 0){
