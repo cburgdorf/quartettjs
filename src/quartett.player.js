@@ -17,6 +17,10 @@
         return this._cardStack.getCards();
     };
 
+    quartett.Player.prototype.getCardCount = function(){
+        return this._cardStack.getLength();
+    };
+
     quartett.Player.prototype.getTopmostCard = function(){
         return this._cardStack.getTopmostCard();
     };
