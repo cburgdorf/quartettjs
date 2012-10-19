@@ -23,6 +23,25 @@
         ok(stephan.getName() === player1)
     });
 
+    test('can register player with custom object', function () {
+        var player1 = {
+            name: 'Stephan',
+            onWin: function(){},
+            onLose: function(){}
+        };
+
+        var game = new quartett.Game({
+            player: [player1, 'Christoph'],
+            cards:[{ wheels: 4 }, { wheels: 2 }]
+        });
+
+        var stephan = game.getStephan();
+        ok(stephan !== undefined);
+        ok(stephan.getName() === 'Stephan');
+        ok(quartett.Util.isFunction(stephan.onWin));
+        ok(quartett.Util.isFunction(stephan.onLose));
+    });
+
     test('player get their cards', function () {
 
         gameOptions.beforePlayerInitialized = function(game){
@@ -124,12 +143,20 @@
 
 test('Christoph wins the game after a draw card', function () {
 
+    var eventStack = [];
+
+    var stephan = {
+        name: 'Stephan',
+        cardLost: function(card){
+            eventStack.push('cardLost_Stephan');
+        }
+    };
+
     var gameOptions = {
-        player: ['Stephan', 'Christoph'],
+        player: [stephan, 'Christoph'],
         cards:[{ wheels: 4, speed: 140 }, { wheels: 2, speed: 120 }, {wheels: 4, speed: 130}, {wheels: 1, speed: 110}]
     };
 
-    var eventStack = [];
 
     //up front, hook up events
     gameOptions.gameFinished = function(game, results){
@@ -191,10 +218,12 @@ test('Christoph wins the game after a draw card', function () {
     //Make sure the events appeared in the correct order
     ok(eventStack[0] === "drawHappened");
     ok(eventStack[1] === "gameMoved");
-    ok(eventStack[2] === "activePlayerChanged");
-    ok(eventStack[3] === "gameMoved");
+    ok(eventStack[2] === "cardLost_Stephan");
+    ok(eventStack[3] === "activePlayerChanged");
     ok(eventStack[4] === "gameMoved");
-    ok(eventStack[5] === "gameFinished");
+    ok(eventStack[5] === "cardLost_Stephan");
+    ok(eventStack[6] === "gameMoved");
+    ok(eventStack[7] === "gameFinished");
 });
 
 

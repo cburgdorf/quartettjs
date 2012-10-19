@@ -26,6 +26,38 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         },
         isString: function(value){
             return typeof  value === 'string';
+        },
+        deepExtend: function () {
+            var target = arguments[0] || {}, i = 1, length = arguments.length, deep = false, options;
+
+            if (target.constructor == Boolean) {
+                deep = target;
+                target = arguments[1] || {};
+                i = 2;
+            }
+
+            if (typeof target != "object" && typeof target != "function")
+                target = {};
+
+            if (length == 1) {
+                target = this;
+                i = 0;
+            }
+
+            for (; i < length; i++)
+                if ((options = arguments[i]) != null)
+                    for (var name in options) {
+                        if (target === options[name])
+                            continue;
+
+                        if (deep && options[name] && typeof options[name] == "object" && target[name] && !options[name].nodeType)
+                            target[name] = this.deepExtend(true, target[name], options[name]);
+
+                        else if (options[name] != undefined)
+                            target[name] = options[name];
+                    }
+
+            return target;
         }
     };
 })(quartett);
@@ -122,15 +154,22 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         var createPlayer = function(player){
             player.forEach(function(value){
 
-                var tempPlayer = new quartett.Player({name: value, game: that });
+                var tempPlayer;
+                if (value.name !== undefined){
+                    tempPlayer = quartett.Util.deepExtend({}, new quartett.Player({name: value.name, game: that }), value);
+                }
+                else{
+                    tempPlayer = new quartett.Player({name: value, game: that });
+                }
+                var rawName = tempPlayer.getName();
 
-                that._playerStack[value] = tempPlayer;
+                that._playerStack[rawName] = tempPlayer;
                 that._playerList.push(tempPlayer);
 
                 that._giveTopmostFreeCardsToPlayer(tempPlayer, that._initialCardsPerPlayer)
 
-                that['get' + value] = function(){
-                        var player = that._playerStack[value];
+                that['get' + rawName] = function(){
+                        var player = that._playerStack[rawName];
                         if (!player){
                             throw new Error('Player ' + player + ' does not exist');
                         }
@@ -180,7 +219,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             return comparer(a.topCard[property], b.topCard[property]);
         };
 
-        var otherPlayers = that._getInactivePlayerAndTheirTopmostCards()
+        var otherPlayers = that._getPlayerAndTheirTopmostCards(function(player){
+                                  return player !== that._activePlayer && !player.getTopmostCard()._blacklisted;
+                              })
                               .sort(unwrapAndCompare);
 
         var best = otherPlayers[otherPlayers.length - 1];
@@ -188,14 +229,23 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         var scoreAgainstTheBest = comparer(that._activePlayer.getTopmostCard()[property], best.topCard[property]);
 
         var giveTopmostCardsToPlayer = function(player){
+
+            var losers = that._playerList.filter(function(p){
+                return p !== player;
+            });
+
+            losers.forEach(function(loser){
+                that._dispatchEventOn(loser, 'cardLost', loser.getTopmostCard());
+            });
+
+            //this would be more natural, however, it breaks the tests. I guess that's because with this code,
+            //the winner card isn't shuffled around the same way. Need to look deeper into this
+            //var cards = losers.map(function(looser){
+            //    return looser.popOutTopmostCard();
+            //})
             var cards = that._getAllTopMostCards();
             player.add(cards);
         };
-
-        //Todo
-        //handle the fact that there can be draws not only between the active player and the best other player
-        //but also between the other players. E.g. the active player has a score of 3 on the property but two
-        //other players both have a score of 4
 
         if (scoreAgainstTheBest === -1){
 
@@ -212,7 +262,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                     //because he already lost on this property but the card continues beeing played
                     this._activePlayer.getTopmostCard()._blacklisted = true;
 
-                    this._dispatchEvent("drawHappened", this);
+                    this._dispatchGameEvent("drawHappened", this);
                 }
                 else{
                     //there's no draw between the best and the second. Hand over the cards!
@@ -227,20 +277,20 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             //in any case, the active player changed
             this._activePlayer = best.player;
             //notify that the active user has changed
-            this._dispatchEvent("activePlayerChanged", this);
+            this._dispatchGameEvent("activePlayerChanged", this);
 
         }
         else if (scoreAgainstTheBest === 0){
             //notify that we have a draw on this property. This basically means the active player
             //needs to play on another property
-            this._dispatchEvent("drawHappened", this);
+            this._dispatchGameEvent("drawHappened", this);
         }
         else{
             giveTopmostCardsToPlayer(this._activePlayer);
         }
 
         //notify progress of the game
-        this._dispatchEvent("gameMoved", this);
+        this._dispatchGameEvent("gameMoved", this);
 
         that._figureOutIfGameIsFinished();
     };
@@ -268,12 +318,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         }
     };
 
-    quartett.Game.prototype._getInactivePlayerAndTheirTopmostCards = function(){
+    quartett.Game.prototype._getPlayerAndTheirTopmostCards = function(filterPredicate){
         var that = this;
         return that._playerList
-            .filter(function(player){
-                return player !== that._activePlayer && !player.getTopmostCard()._blacklisted;
-            })
+            .filter(filterPredicate)
             .map(function(player){
                 return {
                     player: player,
@@ -288,11 +336,17 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         }
     };
 
-    quartett.Game.prototype._dispatchEvent = function(eventName){
-        if (quartett.Util.isFunction(this._options[eventName])){
+    quartett.Game.prototype._dispatchGameEvent = function(eventName){
+        var args = Array.prototype.slice.call(arguments);
+        args.splice(0,0, this._options);
+        this._dispatchEventOn.apply(this, args);
+    };
+
+    quartett.Game.prototype._dispatchEventOn = function(host, eventName){
+        if (quartett.Util.isFunction(host[eventName])){
             var args = Array.prototype.slice.call(arguments);
-            args.splice(0,1);
-            this._options[eventName].apply(this, args);
+            args.splice(0,2);
+            host[eventName].apply(this, args);
         }
     };
 
@@ -306,7 +360,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         if(this._activePlayer.getCards().length === this._gameCardCount){
             this._finished = true;
             if (quartett.Util.isFunction(this._options.gameFinished)){
-                this._dispatchEvent("gameFinished", this, {
+                this._dispatchGameEvent("gameFinished", this, {
                     winner: this._activePlayer
                 });
             }
@@ -332,6 +386,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
     quartett.Player.prototype.getCards = function(){
         return this._cardStack.getCards();
+    };
+
+    quartett.Player.prototype.getCardCount = function(){
+        return this._cardStack.getLength();
     };
 
     quartett.Player.prototype.getTopmostCard = function(){
