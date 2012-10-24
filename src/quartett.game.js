@@ -111,7 +111,7 @@
             });
 
             losers.forEach(function(loser){
-                that._dispatchEventOn(loser, 'cardLost', loser.getTopmostCard());
+                that._dispatchEventOn(loser, 'cardLost', loser.getTopmostCard(), best.topCard, property);
             });
 
             //this would be more natural, however, it breaks the tests. I guess that's because with this code,
