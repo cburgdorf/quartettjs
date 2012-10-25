@@ -143,7 +143,11 @@
                     //because he already lost on this property but the card continues beeing played
                     this._activePlayer.getTopmostCard()._blacklisted = true;
 
-                    this._dispatchGameEvent("drawHappened", this);
+                    this._dispatchGameEvent("drawHappened", this, {
+                        playerOne: best.player,
+                        playerTwo: second.player,
+                        property: property
+                    });
                 }
                 else{
                     //there's no draw between the best and the second. Hand over the cards!
@@ -164,7 +168,11 @@
         else if (scoreAgainstTheBest === 0){
             //notify that we have a draw on this property. This basically means the active player
             //needs to play on another property
-            this._dispatchGameEvent("drawHappened", this);
+            this._dispatchGameEvent("drawHappened", this, {
+                playerOne: that._activePlayer,
+                playerTwo: best.player,
+                property: property
+            });
         }
         else{
             giveTopmostCardsToPlayer(this._activePlayer);
