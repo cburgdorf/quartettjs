@@ -152,8 +152,15 @@ test('Christoph wins the game after a draw card', function () {
         }
     };
 
+    var christoph = {
+        name: 'Christoph',
+        cardsWon: function(card){
+            eventStack.push('cardsWon_Christoph');
+        }
+    };
+
     var gameOptions = {
-        player: [stephan, 'Christoph'],
+        player: [stephan, christoph],
         cards:[{ wheels: 4, speed: 140 }, { wheels: 2, speed: 120 }, {wheels: 4, speed: 130}, {wheels: 1, speed: 110}]
     };
 
@@ -219,13 +226,14 @@ test('Christoph wins the game after a draw card', function () {
     ok(eventStack[0] === "drawHappened");
     ok(eventStack[1] === "gameMoved");
     ok(eventStack[2] === "cardLost_Stephan");
-    ok(eventStack[3] === "activePlayerChanged");
-    ok(eventStack[4] === "gameMoved");
-    ok(eventStack[5] === "cardLost_Stephan");
-    ok(eventStack[6] === "gameMoved");
-    ok(eventStack[7] === "gameFinished");
+    ok(eventStack[3] === "cardsWon_Christoph");
+    ok(eventStack[4] === "activePlayerChanged");
+    ok(eventStack[5] === "gameMoved");
+    ok(eventStack[6] === "cardLost_Stephan");
+    ok(eventStack[7] === "cardsWon_Christoph");
+    ok(eventStack[8] === "gameMoved");
+    ok(eventStack[9] === "gameFinished");
 });
-
 
 test('Can handle higher draw between other players', function () {
 

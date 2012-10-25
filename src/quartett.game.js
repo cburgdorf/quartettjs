@@ -121,6 +121,10 @@
             //})
             var cards = that._getAllTopMostCards();
             player.add(cards);
+
+            //FixMe: This includes his own card. We need to test the uncommented code above more properly and
+            //then switch to it.
+            that._dispatchEventOn(player, 'cardsWon', cards, property);
         };
 
         if (scoreAgainstTheBest === -1){
