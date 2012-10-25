@@ -8,6 +8,7 @@
             that._playerStack = {};
             that._playerList = [];
             that._playerCount = 0;
+            that._finished = false;
 
         var assertConfig = function(config){
             if (!config){
@@ -181,6 +182,10 @@
 
     quartett.Game.prototype.getCards = function(){
         return this._cardStack.getCards();
+    };
+
+    quartett.Game.prototype.isFinished = function(){
+        return this._finished;
     };
 
     //PRIVATE METHODS
