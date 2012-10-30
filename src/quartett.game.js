@@ -57,8 +57,11 @@
 
         assertConfig(options);
         //Todo handle transformation of card types. For now let's assume we get an array of cards
-        that._cardStack.add(options.cards);
-        that._gameCardCount = options.cards.length;
+
+        var cards = options.shuffle ? quartett.Util.shuffleArray(options.cards) : options.cards;
+
+        that._cardStack.add(cards);
+        that._gameCardCount = cards.length;
 
         that._playerCount = options.player.length;
         that._initialCardsPerPlayer = that._cardStack.getLength() / that._playerCount;
@@ -93,7 +96,7 @@
         var comparer = that._cardComparer.getSortFuncForProperty(property);
 
         var unwrapAndCompare = function(a, b){
-            return comparer(a.topCard[property], b.topCard[property]);
+            return comparer(a.topCard[property].value, b.topCard[property].value);
         };
 
         var otherPlayers = that._getPlayerAndTheirTopmostCards(function(player){
@@ -103,7 +106,7 @@
 
         var best = otherPlayers[otherPlayers.length - 1];
 
-        var scoreAgainstTheBest = comparer(that._activePlayer.getTopmostCard()[property], best.topCard[property]);
+        var scoreAgainstTheBest = comparer(that._activePlayer.getTopmostCard()[property].value, best.topCard[property].value);
 
         var giveTopmostCardsToPlayer = function(player){
 
@@ -133,7 +136,7 @@
             //figure out if the best other player is the *only* winner or if there is a draw between other players going on
             if(otherPlayers.length > 1){
                 var second = otherPlayers[otherPlayers.length - 2];
-                var scoreAgainstSecond = comparer(best.topCard[property], second.topCard[property]);
+                var scoreAgainstSecond = comparer(best.topCard[property].value, second.topCard[property].value);
 
                 if (scoreAgainstSecond === 0){
                     //there's a draw between the best other player and at least the second best other player

@@ -5,7 +5,10 @@
     var player2 = 'Christoph';
     var gameOptions = {
         player: [player1, player2],
-        cards:[{ wheels: 4 }, { wheels: 2 }]
+        cards:[
+            new quartett.Card([{ wheels: { value: 4 } }]),
+            new quartett.Card([{ wheels: { value: 2 } }])
+        ]
     };
 
     module("quartett.tests");
@@ -32,7 +35,10 @@
 
         var game = new quartett.Game({
             player: [player1, 'Christoph'],
-            cards:[{ wheels: 4 }, { wheels: 2 }]
+            cards:[
+                    new quartett.Card([{ wheels: { value: 4 } }]),
+                    new quartett.Card([{ wheels: { value: 2 } }])
+                  ]
         });
 
         var stephan = game.getStephan();
@@ -56,7 +62,7 @@
         ok(stephan !== undefined);
         ok(stephan.getName() === player1)
         ok(cardsStephan.length === 1)
-        ok(cardsStephan[0].wheels === 2)
+        ok(cardsStephan[0].wheels.value === 2)
 
         var christoph = game.getChristoph();
         var cardsChristoph = christoph.getCards();
@@ -64,7 +70,7 @@
         ok(christoph !== undefined);
         ok(christoph.getName() === player2)
         ok(cardsChristoph.length === 1)
-        ok(cardsChristoph[0].wheels === 4)
+        ok(cardsChristoph[0].wheels.value === 4)
 
         //there shouldn't be any cards left now
         ok(game.getCards().length === 0);
@@ -86,7 +92,12 @@
 
         var gameOptions = {
             player: [player1, player2],
-            cards:[{ wheels: 4 }, { wheels: 2 }, {wheels: 1}, {wheels: 1}]
+            cards: [
+                new quartett.Card([{ wheels: { value: 4 } }]),
+                new quartett.Card([{ wheels: { value: 2 } }]),
+                new quartett.Card([{ wheels: { value: 1 } }]),
+                new quartett.Card([{ wheels: { value: 1 } }])
+            ]
         };
 
         var eventStack = [];
@@ -161,7 +172,12 @@ test('Christoph wins the game after a draw card', function () {
 
     var gameOptions = {
         player: [stephan, christoph],
-        cards:[{ wheels: 4, speed: 140 }, { wheels: 2, speed: 120 }, {wheels: 4, speed: 130}, {wheels: 1, speed: 110}]
+        cards: [
+            new quartett.Card([{ wheels: { value: 4 }}, { speed: { value: 140 } }]),
+            new quartett.Card([{ wheels: { value: 2 }}, { speed: { value: 120 } }]),
+            new quartett.Card([{ wheels: { value: 4 }}, { speed: { value: 130 } }]),
+            new quartett.Card([{ wheels: { value: 1 }}, { speed: { value: 110 } }])
+        ]
     };
 
 
@@ -237,7 +253,7 @@ test('Christoph wins the game after a draw card', function () {
 
 test('Can handle higher draw between other players', function () {
 
-    var cardPascal = { wheels: 4, speed: 130 };
+    var cardPascal = new quartett.Card([{ wheels: { value: 4 }}, { speed: { value: 130 } }]);
 
     //ATTENTION:
     //Christoph has a higher speed than Pascal or Stephan. However he loses on the wheels property
@@ -245,9 +261,9 @@ test('Can handle higher draw between other players', function () {
     //Even so Christoph has a higher speed property, he is already out on this card. That might be obvious
     //but the data for the test was carefully picked to reflect this scenario
 
-    var cardChristoph = { wheels: 2, speed: 150 };
+    var cardChristoph = new quartett.Card([{ wheels: { value: 2 }}, { speed: { value: 150 } }]);
 
-    var cardStephan = { wheels: 4, speed: 140 };
+    var cardStephan = new quartett.Card([{ wheels: { value: 4 }}, { speed: { value: 140 } }]);
 
     var gameOptions = {
         player: ['Stephan', 'Christoph', 'Pascal'],
