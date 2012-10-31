@@ -26,7 +26,11 @@
             return value + ' €';
         };
 
-        var card = new CarCard([{price: { value: 10000, displayName: 'Price in €' }}]);
+        CarCard.prototype.getDisplayNameFor = function(property){
+            return 'Price in €';
+        };
+
+        var card = new CarCard([{price: { value: 10000 }}]);
 
         ok(card.price.value === 10000);
         ok(card.price.displayValue === '10000 €');

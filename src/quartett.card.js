@@ -24,7 +24,7 @@
             me[name] = {
                 value: properties.value,
                 displayValue: me.getDisplayValueFor(name, properties.value),
-                displayName: properties.displayName !== undefined ? properties.displayName : name
+                displayName: me.getDisplayNameFor(name)
             };
         });
     };
@@ -33,9 +33,15 @@
         return a < b ? -1 : a === b ? 0 : 1;
     };
 
-    //This method should be overriden for games implementing a card to fit their needs
+    //This method should be overwritten for games implementing a card to fit their needs
     quartett.Card.prototype.getDisplayValueFor = function(propertyName, value){
         return value;
     };
+
+    //This method should be overwritten for games implementing a card to fit their needs
+    quartett.Card.prototype.getDisplayNameFor = function(propertyName, value){
+        return value;
+    };
+
 
 })(quartett);
