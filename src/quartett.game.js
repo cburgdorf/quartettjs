@@ -9,6 +9,8 @@
             that._playerCount = 0;
             that._finished = false;
 
+        quartett.Observable.mixin(that);
+
         var assertConfig = function(config){
             if (!config){
                 throw new Error("options are mandatory")
@@ -77,6 +79,7 @@
 
     //PUBLIC METHODS
 
+
     quartett.Game.prototype.start = function(playerName){
         this._activePlayer = playerName ? this._playerStack[playerName] : this._playerList[0];
     };
@@ -114,7 +117,7 @@
             });
 
             losers.forEach(function(loser){
-                that._dispatchEventOn(loser, 'cardLost', loser.getTopmostCard(), player.getTopmostCard(), property);
+                loser.emit('cardLost', loser, loser.getTopmostCard(), player.getTopmostCard(), property);
             });
 
             //this would be more natural, however, it breaks the tests. I guess that's because with this code,
@@ -127,7 +130,7 @@
 
             //FixMe: This includes his own card. We need to test the uncommented code above more properly and
             //then switch to it.
-            that._dispatchEventOn(player, 'cardsWon', cards, property);
+            player.emit('cardsWon', player, cards, property);
         };
 
         if (scoreAgainstTheBest === -1){
@@ -145,7 +148,7 @@
                     //because he already lost on this property but the card continues beeing played
                     this._activePlayer.getTopmostCard()._blacklisted = true;
 
-                    this._dispatchGameEvent("drawHappened", this, {
+                    this.emit('drawHappened', this, {
                         playerOne: best.player,
                         playerTwo: second.player,
                         property: property
@@ -164,13 +167,14 @@
             //in any case, the active player changed
             this._activePlayer = best.player;
             //notify that the active user has changed
-            this._dispatchGameEvent("activePlayerChanged", this);
+            this.emit('activePlayerChanged', this);
 
         }
         else if (scoreAgainstTheBest === 0){
             //notify that we have a draw on this property. This basically means the active player
             //needs to play on another property
-            this._dispatchGameEvent("drawHappened", this, {
+
+            this.emit('drawHappened', this, {
                 playerOne: that._activePlayer,
                 playerTwo: best.player,
                 property: property
@@ -181,7 +185,7 @@
         }
 
         //notify progress of the game
-        this._dispatchGameEvent("gameMoved", this);
+        this.emit('gameMoved', this);
 
         that._figureOutIfGameIsFinished();
     };
@@ -231,20 +235,6 @@
         }
     };
 
-    quartett.Game.prototype._dispatchGameEvent = function(eventName){
-        var args = Array.prototype.slice.call(arguments);
-        args.splice(0,0, this._options);
-        this._dispatchEventOn.apply(this, args);
-    };
-
-    quartett.Game.prototype._dispatchEventOn = function(host, eventName){
-        if (quartett.Util.isFunction(host[eventName])){
-            var args = Array.prototype.slice.call(arguments);
-            args.splice(0,2);
-            host[eventName].apply(this, args);
-        }
-    };
-
     quartett.Game.prototype._getAllTopMostCards = function(){
         return this._playerList.map(function(player){
             return player.popOutTopmostCard();
@@ -254,10 +244,9 @@
     quartett.Game.prototype._figureOutIfGameIsFinished = function(){
         if(this._activePlayer.getCards().length === this._gameCardCount){
             this._finished = true;
-            if (quartett.Util.isFunction(this._options.gameFinished)){
-                this._dispatchGameEvent("gameFinished", this, {
-                    winner: this._activePlayer
-                });
-            }
+
+            this.emit('gameFinished', this, {
+                winner: this._activePlayer
+            });
         }
     };

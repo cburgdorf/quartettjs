@@ -1,36 +1,40 @@
 (function(){
     "use strict";
 
-    var player1 = 'Stephan';
-    var player2 = 'Christoph';
-    var gameOptions = {
-        player: [player1, player2],
-        cards:[
-            new quartett.Card([{ wheels: { value: 4 } }]),
-            new quartett.Card([{ wheels: { value: 2 } }])
-        ]
+    var createDefaultGameOptions = function(){
+        var player1 = 'Stephan';
+        var player2 = 'Christoph';
+        var gameOptions = {
+            player: [player1, player2],
+            cards:[
+                new quartett.Card([{ wheels: { value: 4 } }]),
+                new quartett.Card([{ wheels: { value: 2 } }])
+            ]
+        };
+
+        return { gameOptions: gameOptions, player1: player1, player2: player2 };
     };
 
     module("quartett.tests");
 
     test('can initialize quartettjs', function () {
 
-        var game = new quartett.Game(gameOptions);
+        var options = createDefaultGameOptions();
+        var game = new quartett.Game(options.gameOptions);
         ok(typeof game === 'object');
     });
 
     test('can get player handle', function () {
-        var game = new quartett.Game(gameOptions);
+        var options = createDefaultGameOptions();
+        var game = new quartett.Game(options.gameOptions);
         var stephan = game.getStephan();
         ok(stephan !== undefined);
-        ok(stephan.getName() === player1)
+        ok(stephan.getName() === options.player1)
     });
 
     test('can register player with custom object', function () {
         var player1 = {
-            name: 'Stephan',
-            onWin: function(){},
-            onLose: function(){}
+            name: 'Stephan'
         };
 
         var game = new quartett.Game({
@@ -44,23 +48,23 @@
         var stephan = game.getStephan();
         ok(stephan !== undefined);
         ok(stephan.getName() === 'Stephan');
-        ok(quartett.Util.isFunction(stephan.onWin));
-        ok(quartett.Util.isFunction(stephan.onLose));
     });
 
     test('player get their cards', function () {
 
-        gameOptions.beforePlayerInitialized = function(game){
+        var options = createDefaultGameOptions();
+
+        options.gameOptions.beforePlayerInitialized = function(game){
            //this is the moment before any player has gotten his cards
            ok(game.getCards().length === 2);
         };
 
-        var game = new quartett.Game(gameOptions);
+        var game = new quartett.Game(options.gameOptions);
         var stephan = game.getStephan();
         var cardsStephan = stephan.getCards();
 
         ok(stephan !== undefined);
-        ok(stephan.getName() === player1)
+        ok(stephan.getName() === options.player1)
         ok(cardsStephan.length === 1)
         ok(cardsStephan[0].wheels.value === 2)
 
@@ -68,7 +72,7 @@
         var cardsChristoph = christoph.getCards();
 
         ok(christoph !== undefined);
-        ok(christoph.getName() === player2)
+        ok(christoph.getName() === options.player2)
         ok(cardsChristoph.length === 1)
         ok(cardsChristoph[0].wheels.value === 4)
 
@@ -78,12 +82,15 @@
 
     test('Christoph wins the game', function () {
 
-        gameOptions.gameFinished = function(game, results){
+        var options = createDefaultGameOptions();
+
+        var game = new quartett.Game(options.gameOptions);
+
+        game.on('gameFinished', function(game, results){
             //The game starts with Stephan asking to play on the "wheel" property. Bad luck!
             ok(results.winner.getName() === 'Christoph');
-        };
+        });
 
-        var game = new quartett.Game(gameOptions);
         game.start();
         game.playCard("wheels");
     });
@@ -91,7 +98,7 @@
     test('Christoph wins the game (more advanced)', function () {
 
         var gameOptions = {
-            player: [player1, player2],
+            player: ['Stephan', 'Christoph'],
             cards: [
                 new quartett.Card([{ wheels: { value: 4 } }]),
                 new quartett.Card([{ wheels: { value: 2 } }]),
@@ -103,21 +110,22 @@
         var eventStack = [];
 
         //up front, hook up events
-        gameOptions.gameFinished = function(game, results){
+        var game = new quartett.Game(gameOptions);
+
+        game.on('gameMoved', function(){
+            eventStack.push('gameMoved');
+        });
+
+        game.on('activePlayerChanged',function(game){
+            eventStack.push("activePlayerChanged");
+        });
+
+        game.on('gameFinished',function(game, results){
             eventStack.push("gameFinished")
             //The game starts with Stephan asking to play on the "wheel" property. Bad luck!
             ok(results.winner.getName() === 'Christoph');
-        };
+        });
 
-        gameOptions.gameMoved = function(game){
-            eventStack.push("gameMoved");
-        };
-
-        gameOptions.activePlayerChanged = function(game){
-            eventStack.push("activePlayerChanged");
-        };
-
-        var game = new quartett.Game(gameOptions);
         game.start("Stephan");
 
         //let's make sure the game begins as expected
@@ -157,17 +165,11 @@ test('Christoph wins the game after a draw card', function () {
     var eventStack = [];
 
     var stephan = {
-        name: 'Stephan',
-        cardLost: function(card){
-            eventStack.push('cardLost_Stephan');
-        }
+        name: 'Stephan'
     };
 
     var christoph = {
-        name: 'Christoph',
-        cardsWon: function(card){
-            eventStack.push('cardsWon_Christoph');
-        }
+        name: 'Christoph'
     };
 
     var gameOptions = {
@@ -180,27 +182,35 @@ test('Christoph wins the game after a draw card', function () {
         ]
     };
 
+    var game = new quartett.Game(gameOptions);
 
     //up front, hook up events
-    gameOptions.gameFinished = function(game, results){
+    game.on('gameFinished', function(game, results){
         eventStack.push("gameFinished")
         //The game starts with Stephan asking to play on the "wheel" property. Bad luck!
         ok(results.winner.getName() === 'Christoph');
-    };
+    });
 
-    gameOptions.gameMoved = function(game){
+    game.on('gameMoved', function(game){
         eventStack.push("gameMoved");
-    };
+    });
 
-    gameOptions.activePlayerChanged = function(game){
+    game.on('activePlayerChanged',function(game){
         eventStack.push("activePlayerChanged");
-    };
+    });
 
-    gameOptions.drawHappened = function(game){
+    game.on('drawHappened', function(game){
         eventStack.push("drawHappened");
-    };
+    });
 
-    var game = new quartett.Game(gameOptions);
+    game.getStephan().on('cardLost', function(){
+        eventStack.push('cardLost_Stephan');
+    });
+
+    game.getChristoph().on('cardsWon', function(){
+        eventStack.push('cardsWon_Christoph');
+    });
+
     game.start("Stephan");
 
     //let's make sure the game begins as expected
@@ -276,27 +286,29 @@ test('Can handle higher draw between other players', function () {
 
     var eventStack = [];
 
+    var game = new quartett.Game(gameOptions);
+
     //up front, hook up events
-    gameOptions.gameFinished = function(game, results){
+
+    game.on('gameFinished', function(game, results){
         eventStack.push("gameFinished")
         //The game starts with Christoph asking to play on the "wheel" property. After Pascal and Stephan
         //have a draw here, they play on the speed property so that Stephan wins
         ok(results.winner.getName() === 'Stephan');
-    };
+    });
 
-    gameOptions.gameMoved = function(game){
+    game.on('gameMoved', function(game){
         eventStack.push("gameMoved");
-    };
+    });
 
-    gameOptions.activePlayerChanged = function(game){
+    game.on('activePlayerChanged', function(game){
         eventStack.push("activePlayerChanged");
-    };
+    });
 
-    gameOptions.drawHappened = function(game){
+    game.on('drawHappened', function(game){
         eventStack.push("drawHappened");
-    };
+    });
 
-    var game = new quartett.Game(gameOptions);
     game.start("Christoph");
 
     //let's make sure the game begins as expected
