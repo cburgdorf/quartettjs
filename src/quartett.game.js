@@ -77,6 +77,8 @@
 
     //PUBLIC METHODS
 
+    quartett.Observable.mixin(quartett.Game.prototype);
+
     quartett.Game.prototype.start = function(playerName){
         this._activePlayer = playerName ? this._playerStack[playerName] : this._playerList[0];
     };
@@ -182,6 +184,7 @@
 
         //notify progress of the game
         this._dispatchGameEvent("gameMoved", this);
+        this.emit('gameMoved', this);
 
         that._figureOutIfGameIsFinished();
     };

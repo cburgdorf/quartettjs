@@ -109,15 +109,20 @@
             ok(results.winner.getName() === 'Christoph');
         };
 
-        gameOptions.gameMoved = function(game){
-            eventStack.push("gameMoved");
-        };
+//        gameOptions.gameMoved = function(game){
+//            eventStack.push("gameMoved");
+//        };
 
         gameOptions.activePlayerChanged = function(game){
             eventStack.push("activePlayerChanged");
         };
 
         var game = new quartett.Game(gameOptions);
+
+        game.on('gameMoved', function(){
+            eventStack.push('gameMoved');
+        });
+
         game.start("Stephan");
 
         //let's make sure the game begins as expected

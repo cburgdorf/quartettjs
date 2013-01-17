@@ -18,6 +18,7 @@
         'LICENSE.txt',
         '../src/quartett.intro.js',
         '../src/quartett.core.js',
+        '../src/quartett.observable.js',
         '../src/quartett.util.js',
         '../src/quartett.cardstack.js',
         '../src/quartett.defaultcardcomparer.js',
