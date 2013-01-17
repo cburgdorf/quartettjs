@@ -1,5 +1,3 @@
-(function (quartett, undefined) {
-    "use strict";
     //Player API
 
     quartett.Player = function(options){
@@ -32,5 +30,3 @@
     quartett.Player.prototype.add = function(card){
         this._cardStack.add(card);
     };
-
-})(quartett);

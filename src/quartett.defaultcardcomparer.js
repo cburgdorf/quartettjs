@@ -1,5 +1,3 @@
-(function (quartett, undefined) {
-    "use strict";
 
     //Default Card Comparer
 
@@ -19,4 +17,3 @@
             return a < b ? -1 : a === b ? 0 : 1;
         }
     };
-})(quartett);

@@ -1,5 +1,3 @@
-(function (quartett, undefined) {
-    "use strict";
 
     quartett.Util = {
         isArray: function(value){
@@ -54,4 +52,3 @@
             return arr;
         }
     };
-})(quartett);

@@ -16,10 +16,13 @@
 
     concat([
         'LICENSE.txt',
+        '../src/quartett.intro.js',
         '../src/quartett.core.js',
         '../src/quartett.util.js',
         '../src/quartett.cardstack.js',
         '../src/quartett.defaultcardcomparer.js',
         '../src/quartett.game.js',
-        '../src/quartett.player.js'
+        '../src/quartett.player.js',
+        '../src/quartett.card.js',
+        '../src/quartett.outro.js'
     ], DIST_FILE_PATH);

@@ -1,5 +1,4 @@
-(function (quartett, undefined) {
-    "use strict";
+
     // Game API
 
     quartett.Game = function Game(options){
@@ -262,6 +261,3 @@
             }
         }
     };
-
-
-})(quartett);

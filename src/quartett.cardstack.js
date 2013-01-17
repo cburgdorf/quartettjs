@@ -1,5 +1,3 @@
-(function (quartett, undefined) {
-    "use strict";
 
     //Cardstack API
 
@@ -35,5 +33,3 @@
     quartett.Cardstack.prototype.getTopmostCard = function(){
         return this._stack[this._stack.length - 1];
     };
-
-})(quartett);

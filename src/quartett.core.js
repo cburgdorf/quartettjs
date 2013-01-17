@@ -1,3 +1,2 @@
-(function (window) {
-    window.quartett = { };
-})(window);
+
+    var quartett = window.quartett = { };

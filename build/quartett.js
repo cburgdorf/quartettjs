@@ -11,11 +11,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 
 
-(function (window) {
-    window.quartett = { };
-})(window);
-(function (quartett, undefined) {
+(function (undefined) {
     "use strict";
+
+
+    var quartett = window.quartett = { };
+
 
     quartett.Util = {
         isArray: function(value){
@@ -58,11 +59,18 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                     }
 
             return target;
+        },
+        shuffleArray: function (arr) {
+            for (var i = arr.length - 1; i > 0; i--) {
+                var j = Math.floor(Math.random() * (i + 1));
+                var tmp = arr[i];
+                arr[i] = arr[j];
+                arr[j] = tmp;
+            }
+
+            return arr;
         }
     };
-})(quartett);
-(function (quartett, undefined) {
-    "use strict";
 
     //Cardstack API
 
@@ -99,10 +107,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         return this._stack[this._stack.length - 1];
     };
 
-})(quartett);
-(function (quartett, undefined) {
-    "use strict";
-
     //Default Card Comparer
 
     //A comparer returns a sorter function that can be handed to the standard Array.sort() function
@@ -121,9 +125,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             return a < b ? -1 : a === b ? 0 : 1;
         }
     };
-})(quartett);
-(function (quartett, undefined) {
-    "use strict";
+
     // Game API
 
     quartett.Game = function Game(options){
@@ -132,6 +134,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             that._playerStack = {};
             that._playerList = [];
             that._playerCount = 0;
+            that._finished = false;
 
         var assertConfig = function(config){
             if (!config){
@@ -180,8 +183,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
         assertConfig(options);
         //Todo handle transformation of card types. For now let's assume we get an array of cards
-        that._cardStack.add(options.cards);
-        that._gameCardCount = options.cards.length;
+
+        var cards = options.shuffle ? quartett.Util.shuffleArray(options.cards) : options.cards;
+
+        that._cardStack.add(cards);
+        that._gameCardCount = cards.length;
 
         that._playerCount = options.player.length;
         that._initialCardsPerPlayer = that._cardStack.getLength() / that._playerCount;
@@ -216,7 +222,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         var comparer = that._cardComparer.getSortFuncForProperty(property);
 
         var unwrapAndCompare = function(a, b){
-            return comparer(a.topCard[property], b.topCard[property]);
+            return comparer(a.topCard[property].value, b.topCard[property].value);
         };
 
         var otherPlayers = that._getPlayerAndTheirTopmostCards(function(player){
@@ -226,7 +232,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
         var best = otherPlayers[otherPlayers.length - 1];
 
-        var scoreAgainstTheBest = comparer(that._activePlayer.getTopmostCard()[property], best.topCard[property]);
+        var scoreAgainstTheBest = comparer(that._activePlayer.getTopmostCard()[property].value, best.topCard[property].value);
 
         var giveTopmostCardsToPlayer = function(player){
 
@@ -235,7 +241,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             });
 
             losers.forEach(function(loser){
-                that._dispatchEventOn(loser, 'cardLost', loser.getTopmostCard());
+                that._dispatchEventOn(loser, 'cardLost', loser.getTopmostCard(), player.getTopmostCard(), property);
             });
 
             //this would be more natural, however, it breaks the tests. I guess that's because with this code,
@@ -245,6 +251,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             //})
             var cards = that._getAllTopMostCards();
             player.add(cards);
+
+            //FixMe: This includes his own card. We need to test the uncommented code above more properly and
+            //then switch to it.
+            that._dispatchEventOn(player, 'cardsWon', cards, property);
         };
 
         if (scoreAgainstTheBest === -1){
@@ -252,7 +262,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             //figure out if the best other player is the *only* winner or if there is a draw between other players going on
             if(otherPlayers.length > 1){
                 var second = otherPlayers[otherPlayers.length - 2];
-                var scoreAgainstSecond = comparer(best.topCard[property], second.topCard[property]);
+                var scoreAgainstSecond = comparer(best.topCard[property].value, second.topCard[property].value);
 
                 if (scoreAgainstSecond === 0){
                     //there's a draw between the best other player and at least the second best other player
@@ -262,7 +272,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                     //because he already lost on this property but the card continues beeing played
                     this._activePlayer.getTopmostCard()._blacklisted = true;
 
-                    this._dispatchGameEvent("drawHappened", this);
+                    this._dispatchGameEvent("drawHappened", this, {
+                        playerOne: best.player,
+                        playerTwo: second.player,
+                        property: property
+                    });
                 }
                 else{
                     //there's no draw between the best and the second. Hand over the cards!
@@ -283,7 +297,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         else if (scoreAgainstTheBest === 0){
             //notify that we have a draw on this property. This basically means the active player
             //needs to play on another property
-            this._dispatchGameEvent("drawHappened", this);
+            this._dispatchGameEvent("drawHappened", this, {
+                playerOne: that._activePlayer,
+                playerTwo: best.player,
+                property: property
+            });
         }
         else{
             giveTopmostCardsToPlayer(this._activePlayer);
@@ -301,6 +319,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
     quartett.Game.prototype.getCards = function(){
         return this._cardStack.getCards();
+    };
+
+    quartett.Game.prototype.isFinished = function(){
+        return this._finished;
     };
 
     //PRIVATE METHODS
@@ -366,11 +388,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             }
         }
     };
-
-
-})(quartett);
-(function (quartett, undefined) {
-    "use strict";
     //Player API
 
     quartett.Player = function(options){
@@ -404,4 +421,47 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         this._cardStack.add(card);
     };
 
-})(quartett);
+    //Card API
+
+    quartett.Card = function(options){
+        if (!quartett.Util.isArray(options)){
+            throw new Error("options must be an array");
+        }
+
+        var me = this;
+
+        options.forEach(function(value){
+
+            var i = 0;
+            for(var name in value){
+                i++;
+                if (i > 1){
+                    throw new Error("misstructered data");
+                }
+            }
+
+            var properties = value[name];
+
+            me[name] = {
+                value: properties.value,
+                displayValue: me.getDisplayValueFor(name, properties.value),
+                displayName: me.getDisplayNameFor(name)
+            };
+        });
+    };
+
+    quartett.Card.prototype.defaultComparer = function(a, b){
+        return a < b ? -1 : a === b ? 0 : 1;
+    };
+
+    //This method should be overwritten for games implementing a card to fit their needs
+    quartett.Card.prototype.getDisplayValueFor = function(propertyName, value){
+        return value;
+    };
+
+    //This method should be overwritten for games implementing a card to fit their needs
+    quartett.Card.prototype.getDisplayNameFor = function(propertyName, value){
+        return value;
+    };
+
+})();

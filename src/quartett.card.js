@@ -1,5 +1,4 @@
-(function (quartett, undefined) {
-    "use strict";
+
     //Card API
 
     quartett.Card = function(options){
@@ -42,6 +41,3 @@
     quartett.Card.prototype.getDisplayNameFor = function(propertyName, value){
         return value;
     };
-
-
-})(quartett);
