@@ -39,5 +39,5 @@
 
     //This method should be overwritten for games implementing a card to fit their needs
     quartett.Card.prototype.getDisplayNameFor = function(propertyName, value){
-        return value;
+        return propertyName;
     };

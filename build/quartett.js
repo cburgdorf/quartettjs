@@ -461,7 +461,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
     //This method should be overwritten for games implementing a card to fit their needs
     quartett.Card.prototype.getDisplayNameFor = function(propertyName, value){
-        return value;
+        return propertyName;
     };
 
 })();
