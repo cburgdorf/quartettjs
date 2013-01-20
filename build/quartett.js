@@ -325,7 +325,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             });
 
             losers.forEach(function(loser){
-                loser.emit('cardLost', loser, loser.getTopmostCard(), player.getTopmostCard(), property);
+                loser.emit('cardLost', loser.getTopmostCard(), player.getTopmostCard(), property);
             });
 
             //this would be more natural, however, it breaks the tests. I guess that's because with this code,
@@ -338,7 +338,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
             //FixMe: This includes his own card. We need to test the uncommented code above more properly and
             //then switch to it.
-            player.emit('cardsWon', player, cards, property);
+            player.emit('cardsWon', cards, property);
         };
 
         if (scoreAgainstTheBest === -1){
